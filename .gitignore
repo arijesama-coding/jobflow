@@ -1,13 +1,13 @@
 # Backend
-backend/target/
-backend/.mvn/
-backend/*.log
+backend-jobflow/target/
+backend-jobflow/.mvn/
+backend-jobflow/*.log
 *.class
 
 # Frontend
-frontend/node_modules/
-frontend/dist/
-frontend/.angular/
+frontend-jobflow/node_modules/
+frontend-jobflow/dist/
+frontend-jobflow/.angular/
 
 # Env
 .env
