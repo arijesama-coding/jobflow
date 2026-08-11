@@ -1,0 +1,16 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="auth-form">
+  <h1>Sign in</h1>
+  <label>
+    Email
+    <input type="email" formControlName="email" />
+  </label>
+  <label>
+    Password
+    <input type="password" formControlName="password" />
+  </label>
+  @if (errorMessage) {
+    <p class="error">{{ errorMessage }}</p>
+  }
+  <button type="submit" [disabled]="form.invalid">Sign in</button>
+  <a routerLink="/register">Create an account</a>
+</form>
