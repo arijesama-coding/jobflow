@@ -118,11 +118,20 @@ cd frontend && npm test       # Karma/Jasmine (or your configured runner)
 - Complete Flyway schema for every module in the spec
 - Docker Compose (postgres / backend / frontend) + multi-stage Dockerfiles
 - Spring Security + JWT access-token filter, BCrypt, CORS, GlobalExceptionHandler
-- Auth happy path: register / login issuing JWTs; endpoints stubbed for refresh, logout, forgot/reset password, verify-email
 - Angular auth service/guard/interceptor, routing for every module, landing/login/register pages, shell/sidebar/navbar layout, placeholder pages for each feature module
 
+**Done (Phase 2 — auth completed)**
+- Register / login / refresh / logout all fully implemented, no stubs left
+- Refresh-token rotation: each refresh issues a new token and revokes the old one (hashed at rest in `refresh_tokens`, never stored in plaintext)
+- Account lockout: configurable max failed attempts and lockout duration (`MAX_FAILED_ATTEMPTS`, `LOCKOUT_DURATION_MINUTES`), with auto-unlock once the window passes
+- Email verification and password-reset token issue/consume flow, with expiry (`EMAIL_VERIFICATION_EXPIRATION_MINUTES`, `PASSWORD_RESET_EXPIRATION_MINUTES`); forgot-password never reveals whether an email is registered
+- Password reset revokes all of that user's refresh tokens (forces re-login everywhere)
+- `EmailService` (welcome, verification, reset, interview reminder, follow-up reminder) wired to `spring-boot-starter-mail`, fails soft (logs, doesn't break the request) if SMTP is unreachable
+- `AuditLogService` records REGISTER / LOGIN / LOGIN_FAILED / LOGOUT / TOKEN_REFRESHED / PASSWORD_CHANGED / PASSWORD_RESET_REQUESTED / EMAIL_VERIFIED / ACCOUNT_LOCKED, with the caller's IP, in its own transaction so it survives rollbacks
+- Unit tests for the lockout state machine (`AuthServiceTest`): duplicate email, lock after N failures, reject while locked, auto-unlock after the window
+
 **Still to build, in spec order**
-- Phase 2: finish auth (refresh-token rotation & revocation, account lockout, email verification, password reset, EmailService, audit logging)
+- Angular side of Phase 2: store/refresh the new refresh token in `AuthService`, auto-refresh on 401 via the interceptor, verify-email / forgot-password / reset-password pages (backend endpoints exist, no UI yet)
 - Phase 3: Companies + Job Offers (entities already in schema — need DTOs, mappers, services, controllers, specifications, Angular feature UIs)
 - Phase 4: Applications module + status-history tracking
 - Phase 5: Kanban board (drag & drop, `PATCH /api/applications/{id}/status`)
