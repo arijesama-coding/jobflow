@@ -1,0 +1,116 @@
+<div class="page">
+  <header class="page-header">
+    <h1>Applications</h1>
+    <button (click)="openCreateForm()">+ Add application</button>
+  </header>
+
+  <div class="toolbar">
+    <input
+      type="search"
+      placeholder="Search by company, job title, notes…"
+      [value]="searchTerm()"
+      (input)="onSearch($any($event.target).value)"
+    />
+    <select [value]="statusFilter()" (change)="onStatusFilter($any($event.target).value)">
+      <option value="">All statuses</option>
+      @for (s of statuses; track s) {
+        <option [value]="s">{{ s }}</option>
+      }
+    </select>
+  </div>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (showForm()) {
+    <form [formGroup]="form" (ngSubmit)="submit()" class="inline-form">
+      <select formControlName="companyId">
+        <option value="">No company</option>
+        @for (c of companies(); track c.id) {
+          <option [value]="c.id">{{ c.name }}</option>
+        }
+      </select>
+      <select formControlName="jobOfferId">
+        <option value="">No linked job offer</option>
+        @for (j of jobOffers(); track j.id) {
+          <option [value]="j.id">{{ j.title }}</option>
+        }
+      </select>
+      <select formControlName="status">
+        @for (s of statuses; track s) {
+          <option [value]="s">{{ s }}</option>
+        }
+      </select>
+      <select formControlName="priority">
+        <option value="LOW">Low</option>
+        <option value="MEDIUM">Medium</option>
+        <option value="HIGH">High</option>
+        <option value="URGENT">Urgent</option>
+      </select>
+      <select formControlName="source">
+        <option value="">Source</option>
+        <option value="LINKEDIN">LinkedIn</option>
+        <option value="INDEED">Indeed</option>
+        <option value="WEBSITE">Website</option>
+        <option value="REFERRAL">Referral</option>
+        <option value="OTHER">Other</option>
+      </select>
+      <input formControlName="applicationDate" type="date" placeholder="Application date" />
+      <input formControlName="salaryExpectation" type="number" placeholder="Salary expectation" />
+      <input formControlName="nextFollowUpDate" type="date" placeholder="Next follow-up" />
+      <textarea formControlName="notes" placeholder="Notes"></textarea>
+      <div class="form-actions">
+        <button type="submit" [disabled]="form.invalid">Save</button>
+        <button type="button" (click)="cancelForm()">Cancel</button>
+      </div>
+    </form>
+  }
+
+  @if (loading()) {
+    <p>Loading…</p>
+  } @else if (applications().length === 0) {
+    <div class="empty-state">
+      <p>No applications yet.</p>
+      <button (click)="openCreateForm()">Start tracking your first application</button>
+    </div>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th>Company</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Priority</th>
+          <th>Date</th>
+          <th>Salary</th>
+          <th>Next follow-up</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (application of applications(); track application.id) {
+          <tr>
+            <td>{{ application.companyName || '—' }}</td>
+            <td>{{ application.jobOfferTitle || '—' }}</td>
+            <td>
+              <select [value]="application.status" (change)="changeStatus(application, $any($event.target).value)">
+                @for (s of statuses; track s) {
+                  <option [value]="s">{{ s }}</option>
+                }
+              </select>
+            </td>
+            <td>{{ application.priority }}</td>
+            <td>{{ application.applicationDate || '—' }}</td>
+            <td>{{ application.salaryExpectation ?? '—' }}</td>
+            <td>{{ application.nextFollowUpDate || '—' }}</td>
+            <td>
+              <button (click)="openEditForm(application)">Edit</button>
+              <button (click)="remove(application)">Delete</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>
