@@ -139,9 +139,17 @@ cd frontend && npm test       # Karma/Jasmine (or your configured runner)
 - `CompanyServiceTest`: pins down the IDOR protection specifically (get/update/delete all 404 when the company belongs to another user, even for a valid id)
 - Angular: `CompanyService` / `JobOfferService`, and real (non-mocked) Companies and Job Offers pages — search, create, edit, delete, favorite toggle, archive toggle, skills as comma-separated tags
 
+**Done (Phase 4 — Applications + status-history tracking)**
+- `Application` entity linking to `Company` and `JobOffer` (both optional — a wishlist entry can exist before either is filled in), plus `ApplicationStatusHistory`
+- Every status change is recorded: on create (`fromStatus = null`), on `PUT` update if the status field changed, and on the dedicated `PATCH /api/applications/{id}/status` — the same endpoint the Kanban board (Phase 5) will call on drag & drop
+- `GET /api/applications/{id}/history` exposes the full transition timeline, ownership-checked like everything else
+- Filtering by search, status, priority, company, and application-date range, paginated
+- `ApplicationServiceTest`: pins down that history is recorded correctly (initial create, real transitions, no-op when status is unchanged) and that ownership is enforced
+- Angular: `ApplicationService` and a real Applications table page (spec section 10) — search, status filter, inline create/edit form linking to existing companies/job offers, and a status dropdown per row that calls the same PATCH endpoint the Kanban board will use next
+
 **Still to build, in spec order**
 - Angular side of Phase 2: store/refresh the new refresh token in `AuthService`, auto-refresh on 401 via the interceptor, verify-email / forgot-password / reset-password pages (backend endpoints exist, no UI yet)
-- Phase 4: Applications module + status-history tracking (companies/job offers now exist to link against)
+- Phase 5: Kanban board (drag & drop UI on top of the `PATCH /status` endpoint that already exists)
 - Phase 4: Applications module + status-history tracking
 - Phase 5: Kanban board (drag & drop, `PATCH /api/applications/{id}/status`)
 - Phase 6: Dashboard (stats + charts)
