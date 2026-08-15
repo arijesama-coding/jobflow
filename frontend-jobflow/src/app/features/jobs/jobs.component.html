@@ -1,0 +1,109 @@
+<div class="page">
+  <header class="page-header">
+    <h1>Job offers</h1>
+    <button (click)="openCreateForm()">+ Add job offer</button>
+  </header>
+
+  <div class="toolbar">
+    <input
+      type="search"
+      placeholder="Search by title or location…"
+      [value]="searchTerm()"
+      (input)="onSearch($any($event.target).value)"
+    />
+    <label>
+      <input type="checkbox" [checked]="showArchived()" (change)="toggleShowArchived()" />
+      Show archived
+    </label>
+  </div>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (showForm()) {
+    <form [formGroup]="form" (ngSubmit)="submit()" class="inline-form">
+      <input formControlName="title" placeholder="Job title *" />
+      <select formControlName="companyId">
+        <option value="">No company</option>
+        @for (c of companies(); track c.id) {
+          <option [value]="c.id">{{ c.name }}</option>
+        }
+      </select>
+      <input formControlName="location" placeholder="Location" />
+      <select formControlName="remoteType">
+        <option value="">Remote type</option>
+        <option value="REMOTE">Remote</option>
+        <option value="HYBRID">Hybrid</option>
+        <option value="ONSITE">Onsite</option>
+      </select>
+      <select formControlName="contractType">
+        <option value="">Contract type</option>
+        <option value="CDI">CDI</option>
+        <option value="CDD">CDD</option>
+        <option value="STAGE">Stage</option>
+        <option value="FREELANCE">Freelance</option>
+        <option value="ALTERNANCE">Alternance</option>
+        <option value="INTERIM">Intérim</option>
+      </select>
+      <input formControlName="jobUrl" placeholder="Job URL" />
+      <input formControlName="deadline" type="date" placeholder="Deadline" />
+      <input formControlName="skillsText" placeholder="Skills (comma separated)" />
+      <div class="form-actions">
+        <button type="submit" [disabled]="form.invalid">Save</button>
+        <button type="button" (click)="cancelForm()">Cancel</button>
+      </div>
+    </form>
+  }
+
+  @if (loading()) {
+    <p>Loading…</p>
+  } @else if (jobs().length === 0) {
+    <div class="empty-state">
+      <p>No job offers yet.</p>
+      <button (click)="openCreateForm()">Add your first job offer</button>
+    </div>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>Title</th>
+          <th>Company</th>
+          <th>Type</th>
+          <th>Location</th>
+          <th>Deadline</th>
+          <th>Skills</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (job of jobs(); track job.id) {
+          <tr [class.archived]="job.archived">
+            <td>
+              <button (click)="toggleFavorite(job)" [attr.aria-label]="job.favorite ? 'Unfavorite' : 'Favorite'">
+                {{ job.favorite ? '★' : '☆' }}
+              </button>
+            </td>
+            <td>
+              {{ job.title }}
+              @if (job.deadlinePassed) {
+                <span class="badge badge-danger">Deadline passed</span>
+              }
+            </td>
+            <td>{{ job.companyName || '—' }}</td>
+            <td>{{ job.contractType || '—' }} / {{ job.remoteType || '—' }}</td>
+            <td>{{ job.location || '—' }}</td>
+            <td>{{ job.deadline || '—' }}</td>
+            <td>{{ job.skills.join(', ') || '—' }}</td>
+            <td>
+              <button (click)="openEditForm(job)">Edit</button>
+              <button (click)="toggleArchived(job)">{{ job.archived ? 'Unarchive' : 'Archive' }}</button>
+              <button (click)="remove(job)">Delete</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

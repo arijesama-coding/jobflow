@@ -1,0 +1,77 @@
+<div class="page">
+  <header class="page-header">
+    <h1>Companies</h1>
+    <button (click)="openCreateForm()">+ Add company</button>
+  </header>
+
+  <input
+    type="search"
+    placeholder="Search by name, industry, location…"
+    [value]="searchTerm()"
+    (input)="onSearch($any($event.target).value)"
+  />
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (showForm()) {
+    <form [formGroup]="form" (ngSubmit)="submit()" class="inline-form">
+      <input formControlName="name" placeholder="Company name *" />
+      <input formControlName="industry" placeholder="Industry" />
+      <input formControlName="location" placeholder="Location" />
+      <input formControlName="website" placeholder="Website" />
+      <input formControlName="size" placeholder="Size (e.g. 50-200)" />
+      <textarea formControlName="notes" placeholder="Notes"></textarea>
+      <div class="form-actions">
+        <button type="submit" [disabled]="form.invalid">Save</button>
+        <button type="button" (click)="cancelForm()">Cancel</button>
+      </div>
+    </form>
+  }
+
+  @if (loading()) {
+    <p>Loading…</p>
+  } @else if (companies().length === 0) {
+    <div class="empty-state">
+      <p>No companies yet.</p>
+      <button (click)="openCreateForm()">Add your first company</button>
+    </div>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>Name</th>
+          <th>Industry</th>
+          <th>Location</th>
+          <th>Website</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (company of companies(); track company.id) {
+          <tr>
+            <td>
+              <button (click)="toggleFavorite(company)" [attr.aria-label]="company.favorite ? 'Unfavorite' : 'Favorite'">
+                {{ company.favorite ? '★' : '☆' }}
+              </button>
+            </td>
+            <td>{{ company.name }}</td>
+            <td>{{ company.industry || '—' }}</td>
+            <td>{{ company.location || '—' }}</td>
+            <td>
+              @if (company.website) {
+                <a [href]="company.website" target="_blank" rel="noopener">{{ company.website }}</a>
+              } @else { — }
+            </td>
+            <td>
+              <button (click)="openEditForm(company)">Edit</button>
+              <button (click)="remove(company)">Delete</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

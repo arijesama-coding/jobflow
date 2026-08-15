@@ -130,9 +130,18 @@ cd frontend && npm test       # Karma/Jasmine (or your configured runner)
 - `AuditLogService` records REGISTER / LOGIN / LOGIN_FAILED / LOGOUT / TOKEN_REFRESHED / PASSWORD_CHANGED / PASSWORD_RESET_REQUESTED / EMAIL_VERIFIED / ACCOUNT_LOCKED, with the caller's IP, in its own transaction so it survives rollbacks
 - Unit tests for the lockout state machine (`AuthServiceTest`): duplicate email, lock after N failures, reject while locked, auto-unlock after the window
 
+**Done (Phase 3 — Companies + Job Offers)**
+- `Company` and `JobOffer` entities, repositories, MapStruct mappers, DTOs
+- `CurrentUserProvider`: single choke point that resolves the authenticated user, used by every service to enforce row-level ownership (returns 404, not 403, on mismatch — no existence leak)
+- Spring Specifications for filtering: companies by search/industry/favorite, job offers by search/company/remote type/contract type/favorite/archived — all combined with pagination (`?page=&size=&sort=`)
+- Soft delete (`deleted_at`) on both entities instead of hard delete
+- Job offers: free-text skills resolved find-or-create against the shared `skills` table; `deadlinePassed` computed on every response; favorite and archive as separate PATCH toggles
+- `CompanyServiceTest`: pins down the IDOR protection specifically (get/update/delete all 404 when the company belongs to another user, even for a valid id)
+- Angular: `CompanyService` / `JobOfferService`, and real (non-mocked) Companies and Job Offers pages — search, create, edit, delete, favorite toggle, archive toggle, skills as comma-separated tags
+
 **Still to build, in spec order**
 - Angular side of Phase 2: store/refresh the new refresh token in `AuthService`, auto-refresh on 401 via the interceptor, verify-email / forgot-password / reset-password pages (backend endpoints exist, no UI yet)
-- Phase 3: Companies + Job Offers (entities already in schema — need DTOs, mappers, services, controllers, specifications, Angular feature UIs)
+- Phase 4: Applications module + status-history tracking (companies/job offers now exist to link against)
 - Phase 4: Applications module + status-history tracking
 - Phase 5: Kanban board (drag & drop, `PATCH /api/applications/{id}/status`)
 - Phase 6: Dashboard (stats + charts)
