@@ -1,0 +1,49 @@
+<div class="kanban">
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (loading()) {
+    <p>Loading…</p>
+  } @else {
+    <div class="kanban-board" cdkDropListGroup>
+      @for (column of columns(); track column.status) {
+        <div class="kanban-column">
+          <header>
+            <h3>{{ column.label }}</h3>
+            <span class="count">{{ column.items.length }}</span>
+          </header>
+
+          <div
+            class="kanban-list"
+            cdkDropList
+            [id]="column.status"
+            [cdkDropListData]="column.items"
+            [cdkDropListConnectedTo]="connectedListIds"
+            (cdkDropListDropped)="drop($event, column.status)"
+          >
+            @for (application of column.items; track application.id) {
+              <div class="kanban-card" cdkDrag>
+                <div class="kanban-card-company">{{ application.companyName || 'No company' }}</div>
+                <div class="kanban-card-title">{{ application.jobOfferTitle || 'Untitled role' }}</div>
+                <div class="kanban-card-meta">
+                  <span class="badge" [class]="'priority-' + application.priority.toLowerCase()">
+                    {{ application.priority }}
+                  </span>
+                  @if (application.applicationDate) {
+                    <span>{{ application.applicationDate }}</span>
+                  }
+                </div>
+                @if (application.nextFollowUpDate) {
+                  <div class="kanban-card-followup">Next follow-up: {{ application.nextFollowUpDate }}</div>
+                }
+              </div>
+            } @empty {
+              <div class="kanban-empty">—</div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
