@@ -7,11 +7,12 @@ import { JobOfferService } from '../../core/services/job-offer.service';
 import { APPLICATION_STATUSES, Application, ApplicationStatus } from '../../core/models/application.model';
 import { Company } from '../../core/models/company.model';
 import { JobOffer } from '../../core/models/job-offer.model';
+import { KanbanBoardComponent } from './kanban/kanban-board.component';
 
 @Component({
   selector: 'app-applications',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, KanbanBoardComponent],
   templateUrl: './applications.component.html',
 })
 export class ApplicationsComponent implements OnInit {
@@ -21,6 +22,7 @@ export class ApplicationsComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
 
   readonly statuses = APPLICATION_STATUSES;
+  view = signal<'table' | 'kanban'>('kanban');
 
   applications = signal<Application[]>([]);
   companies = signal<Company[]>([]);
