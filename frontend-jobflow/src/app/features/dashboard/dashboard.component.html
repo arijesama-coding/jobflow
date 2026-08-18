@@ -1,0 +1,119 @@
+<div class="page">
+  <header class="page-header">
+    <h1>Dashboard</h1>
+  </header>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (loading()) {
+    <p>Loading…</p>
+  } @else if (data(); as d) {
+    <div class="stat-grid">
+      <div class="stat-card"><span class="stat-value">{{ d.totalApplications }}</span><span class="stat-label">Total applications</span></div>
+      <div class="stat-card"><span class="stat-value">{{ d.activeApplications }}</span><span class="stat-label">Active</span></div>
+      <div class="stat-card"><span class="stat-value">{{ d.interviews }}</span><span class="stat-label">Interviews</span></div>
+      <div class="stat-card"><span class="stat-value">{{ d.offersReceived }}</span><span class="stat-label">Offers received</span></div>
+      <div class="stat-card"><span class="stat-value">{{ d.acceptedApplications }}</span><span class="stat-label">Accepted</span></div>
+      <div class="stat-card"><span class="stat-value">{{ d.rejectedApplications }}</span><span class="stat-label">Rejected</span></div>
+      <div class="stat-card"><span class="stat-value">{{ d.responseRate }}%</span><span class="stat-label">Response rate</span></div>
+      <div class="stat-card"><span class="stat-value">{{ d.conversionRate }}%</span><span class="stat-label">Conversion rate</span></div>
+    </div>
+
+    <div class="chart-grid">
+      <!-- Applications by month -->
+      <div class="chart-card">
+        <h3>Applications by month</h3>
+        <div class="bar-chart">
+          @for (m of d.applicationsByMonth; track m.month) {
+            <div class="bar-col">
+              <div class="bar" [style.height.%]="(m.count / maxMonthlyCount()) * 100" [title]="m.count + ' applications'"></div>
+              <span class="bar-label">{{ m.month }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Status distribution donut -->
+      <div class="chart-card">
+        <h3>Status distribution</h3>
+        <div class="donut-wrap">
+          <svg viewBox="0 0 140 140" class="donut">
+            <circle cx="70" cy="70" r="60" fill="none" stroke="#eef0f3" stroke-width="20" />
+            @for (seg of donutSegments(); track seg.status) {
+              <circle
+                cx="70" cy="70" r="60" fill="none"
+                [attr.stroke]="seg.color" stroke-width="20"
+                [attr.stroke-dasharray]="seg.dashArray"
+                [attr.stroke-dashoffset]="seg.dashOffset"
+                transform="rotate(-90 70 70)"
+              />
+            }
+          </svg>
+          <ul class="donut-legend">
+            @for (seg of donutSegments(); track seg.status) {
+              <li><span class="dot" [style.background]="seg.color"></span>{{ seg.status }} — {{ seg.count }} ({{ seg.percent }}%)</li>
+            }
+          </ul>
+        </div>
+      </div>
+
+      <!-- Conversion funnel -->
+      <div class="chart-card">
+        <h3>Conversion funnel</h3>
+        <div class="funnel-chart">
+          @for (stage of d.conversionFunnel; track stage.stage) {
+            <div class="funnel-row">
+              <span class="funnel-label">{{ stage.stage }}</span>
+              <div class="funnel-track">
+                <div class="funnel-bar" [style.width.%]="(stage.count / maxFunnelCount()) * 100"></div>
+              </div>
+              <span class="funnel-count">{{ stage.count }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Top targeted companies -->
+      <div class="chart-card">
+        <h3>Most targeted companies</h3>
+        @if (d.topCompanies.length === 0) {
+          <p class="empty-note">No companies linked to applications yet.</p>
+        } @else {
+          <div class="funnel-chart">
+            @for (c of d.topCompanies; track c.companyName) {
+              <div class="funnel-row">
+                <span class="funnel-label">{{ c.companyName }}</span>
+                <div class="funnel-track">
+                  <div class="funnel-bar" [style.width.%]="(c.count / maxCompanyCount()) * 100"></div>
+                </div>
+                <span class="funnel-count">{{ c.count }}</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Source effectiveness -->
+      <div class="chart-card chart-card-wide">
+        <h3>Most effective sources</h3>
+        @if (d.sourceEffectiveness.length === 0) {
+          <p class="empty-note">No application source data yet.</p>
+        } @else {
+          <div class="funnel-chart">
+            @for (s of d.sourceEffectiveness; track s.source) {
+              <div class="funnel-row">
+                <span class="funnel-label">{{ s.source }} ({{ s.totalApplications }})</span>
+                <div class="funnel-track">
+                  <div class="funnel-bar" [style.width.%]="s.effectivenessRate"></div>
+                </div>
+                <span class="funnel-count">{{ s.effectivenessRate }}%</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>
