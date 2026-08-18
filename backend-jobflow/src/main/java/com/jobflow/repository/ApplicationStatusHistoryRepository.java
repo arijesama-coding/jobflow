@@ -8,4 +8,6 @@ import java.util.UUID;
 
 public interface ApplicationStatusHistoryRepository extends JpaRepository<ApplicationStatusHistory, UUID> {
     List<ApplicationStatusHistory> findByApplicationIdOrderByChangedAtAsc(UUID applicationId);
+
+    List<ApplicationStatusHistory> findByApplication_User_IdOrderByChangedAtAsc(UUID userId);
 }
