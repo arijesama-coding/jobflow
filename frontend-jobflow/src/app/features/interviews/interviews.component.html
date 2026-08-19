@@ -1,0 +1,83 @@
+<div class="page">
+  <header class="page-header">
+    <h1>Interviews</h1>
+    <button (click)="openCreateForm()">+ Add interview</button>
+  </header>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (showForm()) {
+    <form [formGroup]="form" (ngSubmit)="submit()" class="inline-form">
+      <select formControlName="applicationId">
+        <option value="">Select application *</option>
+        @for (app of applications(); track app.id) {
+          <option [value]="app.id">{{ applicationLabel(app) }}</option>
+        }
+      </select>
+      <select formControlName="type">
+        <option value="PHONE">Phone</option>
+        <option value="VIDEO">Video</option>
+        <option value="ONSITE">Onsite</option>
+        <option value="TECHNICAL">Technical</option>
+        <option value="HR">HR</option>
+        <option value="FINAL">Final</option>
+      </select>
+      <input formControlName="scheduledAt" type="datetime-local" />
+      <input formControlName="durationMinutes" type="number" placeholder="Duration (minutes)" />
+      <input formControlName="location" placeholder="Location" />
+      <input formControlName="meetingUrl" placeholder="Meeting URL" />
+      <input formControlName="interviewer" placeholder="Interviewer" />
+      <select formControlName="result">
+        <option value="PENDING">Pending</option>
+        <option value="PASSED">Passed</option>
+        <option value="FAILED">Failed</option>
+        <option value="RESCHEDULED">Rescheduled</option>
+      </select>
+      <textarea formControlName="notes" placeholder="Notes"></textarea>
+      <textarea formControlName="feedback" placeholder="Feedback"></textarea>
+      <div class="form-actions">
+        <button type="submit" [disabled]="form.invalid">Save</button>
+        <button type="button" (click)="cancelForm()">Cancel</button>
+      </div>
+    </form>
+  }
+
+  @if (loading()) {
+    <p>Loading…</p>
+  } @else if (interviews().length === 0) {
+    <div class="empty-state">
+      <p>No interviews scheduled yet.</p>
+      <button (click)="openCreateForm()">Add your first interview</button>
+    </div>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th>When</th>
+          <th>Application</th>
+          <th>Type</th>
+          <th>Interviewer</th>
+          <th>Result</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (interview of interviews(); track interview.id) {
+          <tr>
+            <td>{{ interview.scheduledAt | date: 'medium' }}</td>
+            <td>{{ interview.jobOfferTitle || interview.companyName || '—' }}</td>
+            <td>{{ interview.type }}</td>
+            <td>{{ interview.interviewer || '—' }}</td>
+            <td>{{ interview.result }}</td>
+            <td>
+              <button (click)="openEditForm(interview)">Edit</button>
+              <button (click)="remove(interview)">Delete</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

@@ -1,0 +1,57 @@
+<div class="page">
+  <header class="page-header">
+    <h1>Calendar</h1>
+    <div class="calendar-nav">
+      <button (click)="previousMonth()">‹</button>
+      <span class="month-label">{{ monthLabel() }}</span>
+      <button (click)="nextMonth()">›</button>
+    </div>
+  </header>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  <div class="calendar-grid">
+    @for (dow of ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']; track dow) {
+      <div class="calendar-dow">{{ dow }}</div>
+    }
+    @for (day of days(); track day.date.toISOString()) {
+      <button
+        type="button"
+        class="calendar-cell"
+        [class.outside-month]="!day.inCurrentMonth"
+        [class.today]="day.isToday"
+        [class.selected]="selectedDay() === day"
+        (click)="selectDay(day)"
+      >
+        <span class="calendar-date">{{ day.date.getDate() }}</span>
+        @if (day.interviews.length > 0) {
+          <span class="calendar-dot-row">
+            @for (i of day.interviews.slice(0, 3); track i.id) {
+              <span class="calendar-dot"></span>
+            }
+          </span>
+        }
+      </button>
+    }
+  </div>
+
+  @if (selectedDay(); as day) {
+    <div class="chart-card" style="margin-top:16px;">
+      <h3>{{ day.date | date: 'fullDate' }}</h3>
+      @if (day.interviews.length === 0) {
+        <p class="empty-note">No interviews this day.</p>
+      } @else {
+        <ul class="donut-legend">
+          @for (i of day.interviews; track i.id) {
+            <li>
+              <strong>{{ i.scheduledAt | date: 'shortTime' }}</strong> —
+              {{ i.jobOfferTitle || i.companyName || 'Interview' }} ({{ i.type }})
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  }
+</div>

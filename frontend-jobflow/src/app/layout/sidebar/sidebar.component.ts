@@ -12,6 +12,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
       <a routerLink="/companies" routerLinkActive="active">Companies</a>
       <a routerLink="/jobs" routerLinkActive="active">Job offers</a>
       <a routerLink="/interviews" routerLinkActive="active">Interviews</a>
+      <a routerLink="/calendar" routerLinkActive="active">Calendar</a>
       <a routerLink="/follow-ups" routerLinkActive="active">Follow-ups</a>
       <a routerLink="/tasks" routerLinkActive="active">Tasks</a>
       <a routerLink="/documents" routerLinkActive="active">Documents</a>
