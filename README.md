@@ -147,9 +147,29 @@ cd frontend && npm test       # Karma/Jasmine (or your configured runner)
 - `ApplicationServiceTest`: pins down that history is recorded correctly (initial create, real transitions, no-op when status is unchanged) and that ownership is enforced
 - Angular: `ApplicationService` and a real Applications table page (spec section 10) — search, status filter, inline create/edit form linking to existing companies/job offers, and a status dropdown per row that calls the same PATCH endpoint the Kanban board will use next
 
+**Done (Phase 5 — Kanban board)**
+- `KanbanBoardComponent` using Angular CDK drag & drop, added as a view toggle inside the Applications page (Kanban is now the default view, Table is one click away — both share the same `ApplicationService`)
+- 8 columns exactly as listed in spec section 9 (À postuler → Postulé → Screening → Entretien → Entretien technique → Offre → Accepté → Refusé). **Known gap, not hidden:** `WISHLIST`, `FINAL_INTERVIEW` and `WITHDRAWN` aren't spec-listed columns, so applications in those three statuses don't appear on the board — they're still fully visible and editable from the Table view
+- Dragging a card calls `PATCH /api/applications/{id}/status` (the same endpoint built in Phase 4) — optimistic UI update, rolled back if the request fails
+- Cards show company, role, priority badge, application date, and next follow-up date per spec
+
+**Done (Phase 6 — Dashboard)**
+- `GET /api/dashboard`, aggregated in-memory per user (personal-tracker scale, not multi-tenant analytics — documented as a deliberate simplification, revisit if that assumption stops holding)
+- All 8 stat cards from spec section 11: total, active, interviews, offers received, accepted, rejected, response rate, conversion rate
+- **Offers received and response/conversion rates use the status-history table from Phase 4**, not just current status — a rejection after reaching OFFER still counts as an offer received, and a rejection after reaching INTERVIEW still counts as a response and shows up in the funnel. This only exists because Phase 4 built history tracking first.
+- Charts: applications by month (rolling last 8, not a hardcoded Jan–Aug), status distribution donut, conversion funnel (Application → Screening → Interview → Offer → Accepted), most-targeted companies, most-effective sources (% reaching interview stage per source) — all rendered as dependency-free inline SVG/CSS rather than pulling in a chart library, to avoid an extra untested npm dependency
+- `DashboardServiceTest`: specifically pins down that a later rejection doesn't erase prior funnel progress (the one non-obvious rule in this module)
+
+**Done (Phase 7 — Interviews + Calendar)**
+- `Interview` entity linked to `Application` (no direct `user_id` — ownership only reachable via `interview.application.user`, which is exactly the kind of indirection that regresses quietly, so it has its own `InterviewServiceTest`)
+- Full CRUD + filtering (application, type, result, date range), paginated
+- `GET /api/interviews/calendar?from=&to=` — unpaginated, purpose-built for the calendar grid
+- Angular: `InterviewService`, a real Interviews list/form page, and a month-grid `CalendarComponent` (prev/next navigation, day selection, dot markers per day)
+- **Known, documented gap:** spec section 22 wants the calendar to also show follow-ups, deadlines and tasks — those modules don't exist yet (Phase 8), so the calendar is interviews-only for now. The grid and event-rendering plumbing are built so adding the other event types later is additive, not a rewrite.
+
 **Still to build, in spec order**
 - Angular side of Phase 2: store/refresh the new refresh token in `AuthService`, auto-refresh on 401 via the interceptor, verify-email / forgot-password / reset-password pages (backend endpoints exist, no UI yet)
-- Phase 5: Kanban board (drag & drop UI on top of the `PATCH /status` endpoint that already exists)
+- Phase 8: Follow-ups + Tasks (then wire both into the Calendar started in Phase 7)
 - Phase 4: Applications module + status-history tracking
 - Phase 5: Kanban board (drag & drop, `PATCH /api/applications/{id}/status`)
 - Phase 6: Dashboard (stats + charts)
