@@ -1,0 +1,81 @@
+<div class="page">
+  <header class="page-header">
+    <h1>Follow-ups</h1>
+    <button (click)="openCreateForm()">+ Add follow-up</button>
+  </header>
+
+  @if (stats(); as s) {
+    <div class="stat-grid" style="margin-bottom:16px;">
+      <div class="stat-card"><span class="stat-value">{{ s.dueToday }}</span><span class="stat-label">Due today</span></div>
+      <div class="stat-card"><span class="stat-value">{{ s.overdue }}</span><span class="stat-label">Overdue</span></div>
+      <div class="stat-card"><span class="stat-value">{{ s.dueThisWeek }}</span><span class="stat-label">Due this week</span></div>
+    </div>
+  }
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (showForm()) {
+    <form [formGroup]="form" (ngSubmit)="submit()" class="inline-form">
+      <select formControlName="applicationId">
+        <option value="">Select application *</option>
+        @for (app of applications(); track app.id) {
+          <option [value]="app.id">{{ applicationLabel(app) }}</option>
+        }
+      </select>
+      <input formControlName="followUpDate" type="date" />
+      <select formControlName="type">
+        <option value="EMAIL">Email</option>
+        <option value="PHONE">Phone</option>
+        <option value="LINKEDIN">LinkedIn</option>
+        <option value="OTHER">Other</option>
+      </select>
+      <select formControlName="status">
+        <option value="PLANNED">Planned</option>
+        <option value="COMPLETED">Completed</option>
+        <option value="CANCELLED">Cancelled</option>
+      </select>
+      <textarea formControlName="notes" placeholder="Notes"></textarea>
+      <div class="form-actions">
+        <button type="submit" [disabled]="form.invalid">Save</button>
+        <button type="button" (click)="cancelForm()">Cancel</button>
+      </div>
+    </form>
+  }
+
+  @if (loading()) {
+    <p>Loading…</p>
+  } @else if (followUps().length === 0) {
+    <div class="empty-state">
+      <p>No follow-ups planned yet.</p>
+      <button (click)="openCreateForm()">Schedule your first follow-up</button>
+    </div>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Application</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (followUp of followUps(); track followUp.id) {
+          <tr>
+            <td>{{ followUp.followUpDate }}</td>
+            <td>{{ followUp.jobOfferTitle || followUp.companyName || '—' }}</td>
+            <td>{{ followUp.type }}</td>
+            <td>{{ followUp.status }}</td>
+            <td>
+              <button (click)="openEditForm(followUp)">Edit</button>
+              <button (click)="remove(followUp)">Delete</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

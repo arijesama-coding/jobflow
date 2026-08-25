@@ -167,9 +167,16 @@ cd frontend && npm test       # Karma/Jasmine (or your configured runner)
 - Angular: `InterviewService`, a real Interviews list/form page, and a month-grid `CalendarComponent` (prev/next navigation, day selection, dot markers per day)
 - **Known, documented gap:** spec section 22 wants the calendar to also show follow-ups, deadlines and tasks — those modules don't exist yet (Phase 8), so the calendar is interviews-only for now. The grid and event-rendering plumbing are built so adding the other event types later is additive, not a rewrite.
 
+**Done (Phase 8 — Follow-ups + Tasks)**
+- `FollowUp` entity (ownership via `application.user`, like Interview) and `Task` entity (direct `user_id`, application link optional — a task doesn't have to be tied to one application)
+- `GET /api/follow-ups/stats` — due today / overdue / due this week, per spec section 14's mini-dashboard; `FollowUpServiceTest` pins down the date-bucketing boundaries specifically (off-by-one here would silently mislabel an overdue follow-up as merely due this week)
+- Full CRUD + filtering + pagination for both, plus `/calendar` endpoints for each
+- **Closed the gap flagged in Phase 7:** `CalendarComponent` now merges interviews, follow-ups, and task due dates into one month view with a color-coded legend and per-day event list — this was promised as "additive, not a rewrite" and it was. Job-offer deadlines are still not on the calendar (would need a new date-range endpoint on the jobs API); flagging that honestly rather than calling the calendar spec-complete.
+- Angular: `FollowUpService` / `TaskService`, a Follow-ups page with the stats banner, and a Tasks page with a checkbox-style done toggle
+
 **Still to build, in spec order**
 - Angular side of Phase 2: store/refresh the new refresh token in `AuthService`, auto-refresh on 401 via the interceptor, verify-email / forgot-password / reset-password pages (backend endpoints exist, no UI yet)
-- Phase 8: Follow-ups + Tasks (then wire both into the Calendar started in Phase 7)
+- Phase 9: Documents (secured file storage/download) + Contacts + Notes
 - Phase 4: Applications module + status-history tracking
 - Phase 5: Kanban board (drag & drop, `PATCH /api/applications/{id}/status`)
 - Phase 6: Dashboard (stats + charts)

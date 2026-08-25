@@ -1,0 +1,81 @@
+<div class="page">
+  <header class="page-header">
+    <h1>Tasks</h1>
+    <button (click)="openCreateForm()">+ Add task</button>
+  </header>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (showForm()) {
+    <form [formGroup]="form" (ngSubmit)="submit()" class="inline-form">
+      <input formControlName="title" placeholder="Task title *" />
+      <select formControlName="applicationId">
+        <option value="">No linked application</option>
+        @for (app of applications(); track app.id) {
+          <option [value]="app.id">{{ app.jobOfferTitle || app.companyName || 'Untitled' }}</option>
+        }
+      </select>
+      <input formControlName="dueDate" type="date" />
+      <select formControlName="priority">
+        <option value="LOW">Low</option>
+        <option value="MEDIUM">Medium</option>
+        <option value="HIGH">High</option>
+        <option value="URGENT">Urgent</option>
+      </select>
+      <select formControlName="status">
+        <option value="TODO">To do</option>
+        <option value="IN_PROGRESS">In progress</option>
+        <option value="DONE">Done</option>
+        <option value="CANCELLED">Cancelled</option>
+      </select>
+      <textarea formControlName="description" placeholder="Description"></textarea>
+      <div class="form-actions">
+        <button type="submit" [disabled]="form.invalid">Save</button>
+        <button type="button" (click)="cancelForm()">Cancel</button>
+      </div>
+    </form>
+  }
+
+  @if (loading()) {
+    <p>Loading…</p>
+  } @else if (tasks().length === 0) {
+    <div class="empty-state">
+      <p>No tasks yet.</p>
+      <button (click)="openCreateForm()">Add your first task</button>
+    </div>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>Title</th>
+          <th>Application</th>
+          <th>Due date</th>
+          <th>Priority</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (task of tasks(); track task.id) {
+          <tr [class.archived]="task.status === 'DONE'">
+            <td>
+              <input type="checkbox" [checked]="task.status === 'DONE'" (change)="toggleDone(task)" />
+            </td>
+            <td>{{ task.title }}</td>
+            <td>{{ task.applicationLabel || '—' }}</td>
+            <td>{{ task.dueDate || '—' }}</td>
+            <td>{{ task.priority }}</td>
+            <td>{{ task.status }}</td>
+            <td>
+              <button (click)="openEditForm(task)">Edit</button>
+              <button (click)="remove(task)">Delete</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>
