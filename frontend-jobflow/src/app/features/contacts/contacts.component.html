@@ -1,0 +1,75 @@
+<div class="page">
+  <header class="page-header">
+    <h1>Contacts</h1>
+    <button (click)="openCreateForm()">+ Add contact</button>
+  </header>
+
+  <input
+    type="search"
+    placeholder="Search by name, email, position…"
+    [value]="searchTerm()"
+    (input)="onSearch($any($event.target).value)"
+  />
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (showForm()) {
+    <form [formGroup]="form" (ngSubmit)="submit()" class="inline-form">
+      <input formControlName="name" placeholder="Full name *" />
+      <input formControlName="email" type="email" placeholder="Email" />
+      <input formControlName="phone" placeholder="Phone" />
+      <input formControlName="position" placeholder="Position" />
+      <select formControlName="companyId">
+        <option value="">No company</option>
+        @for (c of companies(); track c.id) {
+          <option [value]="c.id">{{ c.name }}</option>
+        }
+      </select>
+      <input formControlName="linkedinUrl" placeholder="LinkedIn URL" />
+      <textarea formControlName="notes" placeholder="Notes"></textarea>
+      <div class="form-actions">
+        <button type="submit" [disabled]="form.invalid">Save</button>
+        <button type="button" (click)="cancelForm()">Cancel</button>
+      </div>
+    </form>
+  }
+
+  @if (loading()) {
+    <p>Loading…</p>
+  } @else if (contacts().length === 0) {
+    <div class="empty-state">
+      <p>No contacts yet.</p>
+      <button (click)="openCreateForm()">Add your first contact</button>
+    </div>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Company</th>
+          <th>Position</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (contact of contacts(); track contact.id) {
+          <tr>
+            <td>{{ contact.name }}</td>
+            <td>{{ contact.companyName || '—' }}</td>
+            <td>{{ contact.position || '—' }}</td>
+            <td>{{ contact.email || '—' }}</td>
+            <td>{{ contact.phone || '—' }}</td>
+            <td>
+              <button (click)="openEditForm(contact)">Edit</button>
+              <button (click)="remove(contact)">Delete</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>
