@@ -45,6 +45,9 @@ services:
       LOCKOUT_DURATION_MINUTES: ${LOCKOUT_DURATION_MINUTES:-15}
       EMAIL_VERIFICATION_EXPIRATION_MINUTES: ${EMAIL_VERIFICATION_EXPIRATION_MINUTES:-1440}
       PASSWORD_RESET_EXPIRATION_MINUTES: ${PASSWORD_RESET_EXPIRATION_MINUTES:-60}
+      UPLOAD_DIR: /data/uploads
+    volumes:
+      - jobflow-uploads:/data/uploads
     ports:
       - "8080:8080"
     networks:
@@ -71,3 +74,4 @@ networks:
 
 volumes:
   jobflow-postgres-data:
+  jobflow-uploads:

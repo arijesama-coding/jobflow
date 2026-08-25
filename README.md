@@ -174,9 +174,15 @@ cd frontend && npm test       # Karma/Jasmine (or your configured runner)
 - **Closed the gap flagged in Phase 7:** `CalendarComponent` now merges interviews, follow-ups, and task due dates into one month view with a color-coded legend and per-day event list — this was promised as "additive, not a rewrite" and it was. Job-offer deadlines are still not on the calendar (would need a new date-range endpoint on the jobs API); flagging that honestly rather than calling the calendar spec-complete.
 - Angular: `FollowUpService` / `TaskService`, a Follow-ups page with the stats banner, and a Tasks page with a checkbox-style done toggle
 
+**Done (Phase 9 — Documents + Contacts + Notes)**
+- **Documents**: real local-disk file storage behind a `FileStorageService` interface (swappable for S3/GCS later without touching callers). Every stored filename is a generated UUID — the user's original filename is kept only as display metadata and never used to build a filesystem path, which is what actually prevents path traversal, not input sanitization. `FileStorageServiceTest` specifically attempts a `../../etc/passwd`-style traversal and asserts it's rejected. Upload/download/rename/delete/set-primary all implemented; light versioning via an optional `replaceDocumentId` on upload; "only one primary per (user, type, application)" enforced on every primary-setting path. Storage location is configurable (`UPLOAD_DIR`) with a persistent Docker volume.
+- **Contacts**: CRUD + search/filter, many-to-many link to Applications (`POST`/`DELETE /api/contacts/{id}/applications/{applicationId}`) via the `application_contacts` join table from the Phase 1 schema
+- **Notes**: polymorphic (`entity_type` + `entity_id`, no FK) attached to Application, Company, Interview, or Contact. Ownership of the *target* is verified per type before a note can be attached — `NoteServiceTest` covers every branch of that switch individually rather than trusting it's exhaustive by eye, since a forgotten case is exactly the kind of thing that regresses quietly.
+- Angular: full Documents page (upload, download, rename, set-primary, delete) and full Contacts page (CRUD + search). **Known, documented gap:** no dedicated Notes UI yet — notes are meant to be embedded in entity detail views (application detail, company detail, etc.) that don't exist yet in this app (list pages only so far), so building a standalone Notes page would mean either faking context or duplicating navigation that doesn't exist. The backend API is fully built and tested; the UI attaches naturally once detail pages exist.
+
 **Still to build, in spec order**
 - Angular side of Phase 2: store/refresh the new refresh token in `AuthService`, auto-refresh on 401 via the interceptor, verify-email / forgot-password / reset-password pages (backend endpoints exist, no UI yet)
-- Phase 9: Documents (secured file storage/download) + Contacts + Notes
+- Phase 10: Notifications
 - Phase 4: Applications module + status-history tracking
 - Phase 5: Kanban board (drag & drop, `PATCH /api/applications/{id}/status`)
 - Phase 6: Dashboard (stats + charts)

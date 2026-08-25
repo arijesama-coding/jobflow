@@ -1,0 +1,71 @@
+<div class="page">
+  <header class="page-header">
+    <h1>Documents</h1>
+  </header>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  <div class="inline-form">
+    <select [(ngModel)]="selectedType" name="type">
+      <option value="CV">CV</option>
+      <option value="COVER_LETTER">Cover letter</option>
+      <option value="CERTIFICATE">Certificate</option>
+      <option value="PORTFOLIO">Portfolio</option>
+      <option value="OTHER">Other</option>
+    </select>
+    <select [(ngModel)]="selectedApplicationId" name="applicationId">
+      <option value="">No linked application</option>
+      @for (app of applications(); track app.id) {
+        <option [value]="app.id">{{ app.jobOfferTitle || app.companyName || 'Untitled' }}</option>
+      }
+    </select>
+    <input type="file" (change)="onFileSelected($event)" [disabled]="uploading()" />
+    @if (uploading()) {
+      <span>Uploading…</span>
+    }
+  </div>
+
+  @if (loading()) {
+    <p>Loading…</p>
+  } @else if (documents().length === 0) {
+    <div class="empty-state">
+      <p>No documents yet.</p>
+      <p>Upload your CV or cover letter above to get started.</p>
+    </div>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>File name</th>
+          <th>Type</th>
+          <th>Application</th>
+          <th>Version</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (doc of documents(); track doc.id) {
+          <tr>
+            <td>
+              <button (click)="setPrimary(doc)" [attr.aria-label]="doc.primary ? 'Primary' : 'Set as primary'">
+                {{ doc.primary ? '★' : '☆' }}
+              </button>
+            </td>
+            <td>{{ doc.fileName }}</td>
+            <td>{{ doc.type }}</td>
+            <td>{{ applicationLabel(doc.applicationId) }}</td>
+            <td>v{{ doc.version }}</td>
+            <td>
+              <button (click)="download(doc)">Download</button>
+              <button (click)="rename(doc)">Rename</button>
+              <button (click)="remove(doc)">Delete</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>
