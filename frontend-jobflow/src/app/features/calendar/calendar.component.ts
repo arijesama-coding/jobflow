@@ -1,21 +1,32 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { forkJoin } from 'rxjs';
 import { InterviewService } from '../../core/services/interview.service';
-import { Interview } from '../../core/models/interview.model';
+import { FollowUpService } from '../../core/services/follow-up.service';
+import { TaskService } from '../../core/services/task.service';
+
+type CalendarEventType = 'interview' | 'followup' | 'task';
+
+interface CalendarEvent {
+  type: CalendarEventType;
+  label: string;
+  time?: string;
+  date: Date;
+}
 
 interface CalendarDay {
   date: Date;
   inCurrentMonth: boolean;
   isToday: boolean;
-  interviews: Interview[];
+  events: CalendarEvent[];
 }
 
 /**
- * Spec section 22 describes a calendar showing interviews, follow-ups,
- * deadlines and tasks together. Follow-ups and tasks don't exist yet
- * (Phase 8) and job-offer deadlines aren't wired in here yet either — this
- * is interviews-only for now. The month grid and event-rendering plumbing
- * are built so adding the other event types later is additive, not a rewrite.
+ * Spec section 22 wants interviews, follow-ups, deadlines and tasks on one
+ * calendar. Interviews, follow-ups and tasks are wired in now that all three
+ * modules exist (Phases 7-8). Job-offer deadlines aren't included yet — that
+ * needs a dedicated date-range endpoint on the jobs API, which doesn't exist.
+ * Flagging rather than pretending this calendar is spec-complete.
  */
 @Component({
   selector: 'app-calendar',
@@ -25,11 +36,13 @@ interface CalendarDay {
 })
 export class CalendarComponent implements OnInit {
   private readonly interviewService = inject(InterviewService);
+  private readonly followUpService = inject(FollowUpService);
+  private readonly taskService = inject(TaskService);
 
   loading = signal(false);
   error = signal<string | null>(null);
   cursor = signal(this.startOfMonth(new Date()));
-  interviews = signal<Interview[]>([]);
+  events = signal<CalendarEvent[]>([]);
   selectedDay = signal<CalendarDay | null>(null);
 
   monthLabel = computed(() =>
@@ -42,10 +55,10 @@ export class CalendarComponent implements OnInit {
     gridStart.setDate(gridStart.getDate() - ((gridStart.getDay() + 6) % 7)); // Monday-start grid
 
     const today = new Date();
-    const byDay = new Map<string, Interview[]>();
-    for (const interview of this.interviews()) {
-      const key = new Date(interview.scheduledAt).toDateString();
-      byDay.set(key, [...(byDay.get(key) ?? []), interview]);
+    const byDay = new Map<string, CalendarEvent[]>();
+    for (const event of this.events()) {
+      const key = event.date.toDateString();
+      byDay.set(key, [...(byDay.get(key) ?? []), event]);
     }
 
     const result: CalendarDay[] = [];
@@ -56,7 +69,7 @@ export class CalendarComponent implements OnInit {
         date,
         inCurrentMonth: date.getMonth() === monthStart.getMonth(),
         isToday: date.toDateString() === today.toDateString(),
-        interviews: byDay.get(date.toDateString()) ?? [],
+        events: byDay.get(date.toDateString()) ?? [],
       });
     }
     return result;
@@ -72,14 +85,42 @@ export class CalendarComponent implements OnInit {
     const monthStart = this.cursor();
     const rangeStart = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
     const rangeEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 1);
+    const isoStart = rangeStart.toISOString();
+    const isoEnd = rangeEnd.toISOString();
+    const dateStart = isoStart.slice(0, 10);
+    const dateEnd = isoEnd.slice(0, 10);
 
-    this.interviewService.calendar(rangeStart.toISOString(), rangeEnd.toISOString()).subscribe({
-      next: (interviews) => {
-        this.interviews.set(interviews);
+    forkJoin({
+      interviews: this.interviewService.calendar(isoStart, isoEnd),
+      followUps: this.followUpService.calendar(dateStart, dateEnd),
+      tasks: this.taskService.calendar(dateStart, dateEnd),
+    }).subscribe({
+      next: ({ interviews, followUps, tasks }) => {
+        const events: CalendarEvent[] = [
+          ...interviews.map((i) => ({
+            type: 'interview' as const,
+            label: `${i.jobOfferTitle || i.companyName || 'Interview'} (${i.type})`,
+            time: new Date(i.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            date: new Date(i.scheduledAt),
+          })),
+          ...followUps.map((f) => ({
+            type: 'followup' as const,
+            label: `Follow-up: ${f.jobOfferTitle || f.companyName || 'application'} (${f.type})`,
+            date: new Date(f.followUpDate),
+          })),
+          ...tasks
+            .filter((t) => !!t.dueDate)
+            .map((t) => ({
+              type: 'task' as const,
+              label: `Task: ${t.title}`,
+              date: new Date(t.dueDate as string),
+            })),
+        ];
+        this.events.set(events);
         this.loading.set(false);
       },
       error: () => {
-        this.error.set('Unable to load interviews for this month.');
+        this.error.set('Unable to load calendar data for this month.');
         this.loading.set(false);
       },
     });
